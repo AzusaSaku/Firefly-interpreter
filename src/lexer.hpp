@@ -2,7 +2,6 @@
 
 #include <string>
 #include <utility>
-
 #include "token.hpp"
 
 struct Lexer {
@@ -22,7 +21,15 @@ void read_char(Lexer *l) {
     l->read_position += 1;
 }
 
-// 识别字符 -> 字母、下划线
+char peek_char(Lexer *l) {
+    if (l->read_position >= l->input.length()) {
+        return 0;
+    } else {
+        return l->input[l->read_position];
+    }
+}
+
+// 识别字符 -> 字母 下划线
 bool isletter(char ch) {
     return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
 }
@@ -44,7 +51,7 @@ string read_identifier(Lexer *l) {
     while (isletter(l->ch)) {
         read_char(l);
     }
-    return l->input.substr(position, l->position);
+    return l->input.substr(position, (l->position - position));
 }
 
 string read_number(Lexer *l) {
@@ -52,41 +59,76 @@ string read_number(Lexer *l) {
     while (isdigit(l->ch)) {
         read_char(l);
     }
-    return l->input.substr(position, l->position);
+    return l->input.substr(position, (l->position - position));
+}
+
+// 创建token时如需要将char转换为string，使用该函数
+token new_token(char ch, token_type type) {
+    return token{.Literal = string(1, ch), .type = type};
 }
 
 token next_token(Lexer *l) {
     token tok;
-
     eat_whitespace(l);
-
     switch (l->ch) {
         case '=' :
-            tok = token{.Literal =  "=", .type =  TK_ASSIGN};
-            break;
-        case ';' :
-            tok = token{.Literal =  ";", .type =  TK_SEMICOLON};
-            break;
-        case '(' :
-            tok = token{.Literal =  "(", .type =  TK_LPAREN};
-            break;
-        case ')' :
-            tok = token{.Literal =  ")", .type =  TK_RPAREN};
-            break;
-        case ',' :
-            tok = token{.Literal =  ",", .type =  TK_COMMA};
+            if (peek_char(l) == '=') {
+                char ch = l->ch;
+                read_char(l);
+                string literal = string(1, ch) + string(1, l->ch);
+                tok = token{.Literal =  literal, .type =  EQ};
+            } else {
+                tok = new_token(l->ch, ASSIGN);
+            }
             break;
         case '+' :
-            tok = token{.Literal =  "+", .type =  TK_PLUS};
+            tok = new_token(l->ch, PLUS);
+            break;
+        case '-' :
+            tok = new_token(l->ch, MINUS);
+            break;
+        case '*' :
+            tok = new_token(l->ch, ASTERISK);
+            break;
+        case '/' :
+            tok = new_token(l->ch, SLASH);
+            break;
+        case '!' :
+            if (peek_char(l) == '=') {
+                char ch = l->ch;
+                read_char(l);
+                string literal = string(1, ch) + string(1, l->ch);
+                tok = token{.Literal = literal, .type = NOT_EQ};
+            } else {
+                tok = new_token(l->ch, BANG);
+            }
+            break;
+        case '<' :
+            tok = new_token(l->ch, LT);
+            break;
+        case '>' :
+            tok = new_token(l->ch, GT);
+            break;
+        case ',' :
+            tok = new_token(l->ch, COMMA);
+            break;
+        case ';' :
+            tok = new_token(l->ch, SEMICOLON);
+            break;
+        case '(' :
+            tok = new_token(l->ch, LPAREN);
+            break;
+        case ')' :
+            tok = new_token(l->ch, RPAREN);
             break;
         case '{' :
-            tok = token{.Literal =  "{", .type =  TK_LBRACE};
+            tok = new_token(l->ch, LBRACE);
             break;
         case '}' :
-            tok = token{.Literal =  "}", .type =  TK_RBRACE};
+            tok = new_token(l->ch, RBRACE);
             break;
         case 0 :
-            tok = token{.Literal =  "", .type =  TK_EOF};
+            tok = new_token(l->ch, END);
             break;
         default:
             if (isletter(l->ch)) {
@@ -95,12 +137,14 @@ token next_token(Lexer *l) {
                 return tok;
             } else if (isdigit(l->ch)) {
                 tok.Literal = read_number(l);
-                tok.type = TK_INT;
+                tok.type = INT;
                 return tok;
-            }else {
-                tok = token{.Literal =  "", .type =  TK_ILLEGAL};
+            } else {
+                tok = new_token(l->ch, ILLEGAL);
             }
     }
+    read_char(l);
+    return tok;
 }
 
 Lexer *new_lex(string input) {

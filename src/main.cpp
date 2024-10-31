@@ -1,7 +1,10 @@
 #include <iostream>
+#include "repl.hpp"
+using namespace std;
 
 int main()
 {
-    std::cout<<"Hello, World!"<<std::endl;
-    return 0;
+    cout << "Hello Firefly!" << endl;
+    cout << "Enter the code to get the token: " << endl;
+    start();
 }
