@@ -1,8 +1,8 @@
 /* 定义词法分析器 */
 
+#include "../token/token.hpp"
 #include <string>
 #include <utility>
-#include "token.hpp"
 
 struct Lexer {
     string input;
@@ -63,12 +63,12 @@ string read_number(Lexer *l) {
 }
 
 // 创建token时如需要将char转换为string，使用该函数
-token new_token(char ch, token_type type) {
-    return token{.Literal = string(1, ch), .type = type};
+Token new_token(char ch, TokenType type) {
+    return Token{.Literal = string(1, ch), .type = type};
 }
 
-token next_token(Lexer *l) {
-    token tok;
+Token next_token(Lexer *l) {
+    Token tok;
     eat_whitespace(l);
     switch (l->ch) {
         case '=' :
@@ -76,7 +76,7 @@ token next_token(Lexer *l) {
                 char ch = l->ch;
                 read_char(l);
                 string literal = string(1, ch) + string(1, l->ch);
-                tok = token{.Literal =  literal, .type =  EQ};
+                tok = Token{.Literal =  literal, .type =  EQ};
             } else {
                 tok = new_token(l->ch, ASSIGN);
             }
@@ -98,7 +98,7 @@ token next_token(Lexer *l) {
                 char ch = l->ch;
                 read_char(l);
                 string literal = string(1, ch) + string(1, l->ch);
-                tok = token{.Literal = literal, .type = NOT_EQ};
+                tok = Token{.Literal = literal, .type = NOT_EQ};
             } else {
                 tok = new_token(l->ch, BANG);
             }

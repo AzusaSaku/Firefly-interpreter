@@ -6,7 +6,7 @@
 using namespace std;
 
 // 词法单元类型
-enum token_type {
+enum TokenType {
     ILLEGAL, END,
     IDENT, INT, // 标识符
     ASSIGN, PLUS, MINUS, ASTERISK, SLASH, BANG, LT, GT, // 运算符 -> = + - * / ! < >
@@ -16,13 +16,13 @@ enum token_type {
     FUNC, VAR, TRUE, FALSE, IF, ELSE, RETURN // 关键字 -> func var true false if else return
 };
 
-struct token {
+struct Token {
     string Literal;
-    token_type type;
+    TokenType type;
 };
 
 // 关键字
-map<string, token_type> keywords = {
+map<string, TokenType> keywords = {
         {"func",   FUNC},
         {"var",    VAR},
         {"true",   TRUE},
@@ -32,7 +32,7 @@ map<string, token_type> keywords = {
         {"return", RETURN}
 };
 
-token_type lookup_ident(const string &ident) {
+TokenType lookup_ident(const string &ident) {
     if (keywords.find(ident) != keywords.end()) {
         return keywords[ident];
     }

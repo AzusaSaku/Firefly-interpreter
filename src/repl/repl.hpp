@@ -1,7 +1,7 @@
 /* 控制台 交互模式 */
 
+#include "../lexer/lexer.hpp"
 #include <iostream>
-#include "lexer.hpp"
 
 const string PROMPT = ">> ";
 
@@ -11,7 +11,7 @@ void start() {
     while (getline(cin, input)) {
         Lexer *l = new_lex(input);
         while (l->ch != 0) {
-            token tok = next_token(l);
+            Token tok = next_token(l);
             cout << "type: " << tok.type << ", literal: " << tok.Literal << endl;
         }
         cout << PROMPT;
