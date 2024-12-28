@@ -76,59 +76,59 @@ Token next_token(Lexer *l) {
                 char ch = l->ch;
                 read_char(l);
                 string literal = string(1, ch) + string(1, l->ch);
-                tok = Token{.Literal =  literal, .type =  EQ};
+                tok = Token{.Literal =  literal, .type =  TokenType::EQ};
             } else {
-                tok = new_token(l->ch, ASSIGN);
+                tok = new_token(l->ch, TokenType::ASSIGN);
             }
             break;
         case '+' :
-            tok = new_token(l->ch, PLUS);
+            tok = new_token(l->ch, TokenType::PLUS);
             break;
         case '-' :
-            tok = new_token(l->ch, MINUS);
+            tok = new_token(l->ch, TokenType::MINUS);
             break;
         case '*' :
-            tok = new_token(l->ch, ASTERISK);
+            tok = new_token(l->ch, TokenType::ASTERISK);
             break;
         case '/' :
-            tok = new_token(l->ch, SLASH);
+            tok = new_token(l->ch, TokenType::SLASH);
             break;
         case '!' :
             if (peek_char(l) == '=') {
                 char ch = l->ch;
                 read_char(l);
                 string literal = string(1, ch) + string(1, l->ch);
-                tok = Token{.Literal = literal, .type = NOT_EQ};
+                tok = Token{.Literal = literal, .type = TokenType::NOT_EQ};
             } else {
-                tok = new_token(l->ch, BANG);
+                tok = new_token(l->ch, TokenType::BANG);
             }
             break;
         case '<' :
-            tok = new_token(l->ch, LT);
+            tok = new_token(l->ch, TokenType::LT);
             break;
         case '>' :
-            tok = new_token(l->ch, GT);
+            tok = new_token(l->ch, TokenType::GT);
             break;
         case ',' :
-            tok = new_token(l->ch, COMMA);
+            tok = new_token(l->ch, TokenType::COMMA);
             break;
         case ';' :
-            tok = new_token(l->ch, SEMICOLON);
+            tok = new_token(l->ch, TokenType::SEMICOLON);
             break;
         case '(' :
-            tok = new_token(l->ch, LPAREN);
+            tok = new_token(l->ch, TokenType::LPAREN);
             break;
         case ')' :
-            tok = new_token(l->ch, RPAREN);
+            tok = new_token(l->ch, TokenType::RPAREN);
             break;
         case '{' :
-            tok = new_token(l->ch, LBRACE);
+            tok = new_token(l->ch, TokenType::LBRACE);
             break;
         case '}' :
-            tok = new_token(l->ch, RBRACE);
+            tok = new_token(l->ch, TokenType::RBRACE);
             break;
         case 0 :
-            tok = new_token(l->ch, END);
+            tok = new_token(l->ch, TokenType::END);
             break;
         default:
             if (isletter(l->ch)) {
@@ -137,10 +137,10 @@ Token next_token(Lexer *l) {
                 return tok;
             } else if (isdigit(l->ch)) {
                 tok.Literal = read_number(l);
-                tok.type = INT;
+                tok.type = TokenType::INT;
                 return tok;
             } else {
-                tok = new_token(l->ch, ILLEGAL);
+                tok = new_token(l->ch, TokenType::ILLEGAL);
             }
     }
     read_char(l);

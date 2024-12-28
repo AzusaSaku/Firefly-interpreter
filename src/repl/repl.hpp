@@ -12,7 +12,7 @@ void start() {
         Lexer *l = new_lex(input);
         while (l->ch != 0) {
             Token tok = next_token(l);
-            cout << "type: " << tok.type << ", literal: " << tok.Literal << endl;
+            cout << "type: " << magic_enum::enum_name(tok.type) << ", literal: " << tok.Literal << endl;
         }
         cout << PROMPT;
     }

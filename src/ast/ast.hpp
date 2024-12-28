@@ -8,28 +8,22 @@ using namespace std;
 class Node {
 public:
     virtual string token_literal() = 0;
+//    virtual void print() = 0;
 };
 
-class Statement : public Node {
+class Statement : public Node { // 语句
 public:
     virtual string statement_node() = 0;
 };
 
-class Expression : public Node {
+class Expression : public Node { // 表达式
 public:
-    virtual string expression_node() = 0;
-};
-
-class Identifier {
-public:
-    Token token;
-    string value;
-    static string expression_node() {
-        return "Identifier";
-    }
-    string token_literal() const {
-        // TODO
-    }
+    string token_literal() override{
+        return "";
+    };
+    virtual string expression_node(){
+        return "";
+    };
 };
 
 class Program : public Node {
@@ -42,8 +36,58 @@ public:
             return "";
         }
     }
+
+//    void print() override {
+//        for (auto &stmt : statements) {
+//            stmt->print();
+//        }
+//    }
 };
 
+// 标识符表达式
+class Identifier : public Expression {
+public:
+    Token token;
+    string value;
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 整型字面量表达式
+class IntegerLiteral : public Expression {
+public:
+    Token token;
+    int value{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 前缀表达式
+class PrefixExpression : public Expression {
+public:
+    Token token;
+    string op;
+    Expression *right{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 中缀表达式
+class InfixExpression : public Expression {
+public:
+    Token token;
+    Expression *left{};
+    string op;
+    Expression *right{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// VAR语句
 class VarStatement : public Statement {
 public:
     Token token;
@@ -53,7 +97,33 @@ public:
         // TODO
     }
     string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// RETURN语句
+class ReturnStatement : public Statement {
+public:
+    Token token;
+    Expression *return_value{};
+    string statement_node() override {
         // TODO
+    }
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 仅由一个表达式构成的语句
+class ExpressionStatement : public Statement {
+public:
+    Token token;
+    Expression *expression{};
+    string statement_node() override {
+        // TODO
+    }
+    string token_literal() override {
+        return token.Literal;
     }
 };
 
