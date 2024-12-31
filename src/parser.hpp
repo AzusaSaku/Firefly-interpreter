@@ -1,10 +1,13 @@
 /* 语法分析器 */
 
+#ifndef FIREFLY_INTERPRETER_PARSER_HPP
+#define FIREFLY_INTERPRETER_PARSER_HPP
+
 #include <memory>
 #include <functional>
 #include <utility>
-#include "../lexer/lexer.hpp"
-#include "../ast/ast.hpp"
+#include "lexer.hpp"
+#include "ast.hpp"
 
 enum Precedence {// 弱枚举类型
     LOWEST,
@@ -62,6 +65,11 @@ public:
         this->register_prefix(TokenType::INT, [this]() { return this->parse_integer_literal(); });
         this->register_prefix(TokenType::BANG, [this]() { return this->parse_prefix_expression(); });
         this->register_prefix(TokenType::MINUS, [this]() { return this->parse_prefix_expression(); });
+        this->register_prefix(TokenType::TRUE, [this]() { return this->parse_boolean(); });
+        this->register_prefix(TokenType::FALSE, [this]() { return this->parse_boolean(); });
+        this->register_prefix(TokenType::LPAREN, [this]() { return this->parse_grouped_expression(); });
+        this->register_prefix(TokenType::IF, [this]() { return this->parse_if_expression(); });
+        this->register_prefix(TokenType::FUNC, [this]() { return this->parse_function_literal(); });
         
         // 注册中缀解析函数
         this->register_infix(TokenType::PLUS, [this](Expression &left) { return this->parse_infix_expression(left); });
@@ -72,6 +80,7 @@ public:
         this->register_infix(TokenType::NOT_EQ, [this](Expression &left) { return this->parse_infix_expression(left); });
         this->register_infix(TokenType::LT, [this](Expression &left) { return this->parse_infix_expression(left); });
         this->register_infix(TokenType::GT, [this](Expression &left) { return this->parse_infix_expression(left); });
+        this->register_infix(TokenType::LPAREN, [this](Expression &left) { return this->parse_call_expression(&left); });
 
         // 读取两个token
         parser_next_token();
@@ -115,6 +124,16 @@ public:
         }
 
         auto left_exp = prefix();
+
+        while (!peek_token_is(TokenType::SEMICOLON) && precedence < peek_precedence()) {
+            auto infix = infix_parse_fns[peek_token.type];
+            if (!infix) {
+                return left_exp;
+            }
+
+            parser_next_token();
+            left_exp = infix(*left_exp);
+        }
 
         return left_exp;
     }
@@ -169,6 +188,163 @@ public:
         return expression;
     }
 
+    // 解析布尔表达式
+    Expression *parse_boolean() const {
+        auto *boolean = new Boolean();
+        boolean->token = cur_token;
+        boolean->value = cur_token_is(TokenType::TRUE);
+        return boolean;
+    }
+
+    // 解析分组表达式
+    Expression *parse_grouped_expression() {
+        parser_next_token();
+        auto exp = parse_expression(Precedence::LOWEST);
+        if (!expect_peek(TokenType::RPAREN)) {
+            return nullptr;
+        }
+        return exp;
+    }
+
+    // 解析语句块
+    BlockStatement *parse_block_statement() {
+        auto *block = new BlockStatement();
+        block->token = cur_token;
+        block->statements = vector<Statement *>();
+
+        parser_next_token();
+
+        while (!cur_token_is(TokenType::RBRACE) && !cur_token_is(TokenType::END)) {
+            auto *stmt = parse_statement();
+            if (stmt != nullptr) {
+                block->statements.push_back(stmt);
+            }
+            parser_next_token();
+        }
+
+        return block;
+    }
+
+    // 解析IF表达式
+    Expression *parse_if_expression() {
+        auto *expression = new IfExpression();
+        expression->token = cur_token;
+
+        if (!expect_peek(TokenType::LPAREN)) {
+            return nullptr;
+        }
+
+        parser_next_token();
+        expression->condition = parse_expression(Precedence::LOWEST);
+
+        if (!expect_peek(TokenType::RPAREN)) {
+            return nullptr;
+        }
+
+        if (!expect_peek(TokenType::LBRACE)) {
+            return nullptr;
+        }
+
+        expression->consequence = parse_block_statement();
+
+        if (peek_token_is(TokenType::ELSE)) {
+            parser_next_token();
+            if (!expect_peek(TokenType::LBRACE)) {
+                return nullptr;
+            }
+            expression->alternative = parse_block_statement();
+        }
+
+        return expression;
+    }
+
+    // 解析函数字面量表达式
+    Expression *parse_function_literal() {
+        auto *function = new FunctionLiteral();
+        function->token = cur_token;
+
+        if (!expect_peek(TokenType::LPAREN)) {
+            return nullptr;
+        }
+
+        function->parameters = parse_function_parameters();
+
+        if (!expect_peek(TokenType::LBRACE)) {
+            return nullptr;
+        }
+
+        function->body = parse_block_statement();
+
+        return function;
+    }
+
+    // 解析函数参数
+    vector<Identifier *> parse_function_parameters() {
+        vector<Identifier *> identifiers;
+
+        if (peek_token_is(TokenType::RPAREN)) {
+            parser_next_token();
+            return identifiers;
+        }
+
+        parser_next_token();
+
+        auto *ident = new Identifier();
+        ident->token = cur_token;
+        ident->value = cur_token.Literal;
+        identifiers.push_back(ident);
+
+        while (peek_token_is(TokenType::COMMA)) {
+            parser_next_token();
+            parser_next_token();
+
+            ident = new Identifier();
+            ident->token = cur_token;
+            ident->value = cur_token.Literal;
+            identifiers.push_back(ident);
+        }
+
+        if (!expect_peek(TokenType::RPAREN)) {
+            return {};
+        }
+
+        return identifiers;
+    }
+
+    // 解析函数调用表达式
+    Expression *parse_call_expression(Expression *function) {
+        auto *exp = new CallExpression();
+        exp->token = cur_token;
+        exp->function = function;
+        exp->arguments = parse_call_arguments();
+        return exp;
+    }
+
+    // 解析函数调用参数
+    vector<Expression *> parse_call_arguments() {
+        vector<Expression *> args;
+
+        if (peek_token_is(TokenType::RPAREN)) {
+            parser_next_token();
+            return args;
+        }
+
+        parser_next_token();
+        args.push_back(parse_expression(Precedence::LOWEST));
+
+        while (peek_token_is(TokenType::COMMA)) {
+            parser_next_token();
+            parser_next_token();
+            args.push_back(parse_expression(Precedence::LOWEST));
+        }
+
+        if (!expect_peek(TokenType::RPAREN)) {
+            return {};
+        }
+
+        return args;
+    }
+
     // 解析表达式语句
     ExpressionStatement *parse_expression_statement() {
         auto *stmt = new ExpressionStatement();
@@ -198,7 +374,9 @@ public:
             return nullptr;
         }
 
-        // TODO: 跳过表达式
+        parser_next_token();
+
+        stmt->value = parse_expression(Precedence::LOWEST);
 
         if (!expect_peek(TokenType::SEMICOLON)) {
             parser_next_token();
@@ -214,7 +392,7 @@ public:
 
         parser_next_token();
 
-        // TODO: 跳过表达式
+        stmt->return_value = parse_expression(Precedence::LOWEST);
 
         while (!cur_token_is(TokenType::SEMICOLON)) {
             parser_next_token();
@@ -260,8 +438,5 @@ public:
         return Precedence::LOWEST;
     }
 };
-
-#ifndef FIREFLY_INTERPRETER_PARSER_HPP
-#define FIREFLY_INTERPRETER_PARSER_HPP
 
 #endif //FIREFLY_INTERPRETER_PARSER_HPP

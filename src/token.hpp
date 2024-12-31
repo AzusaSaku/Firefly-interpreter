@@ -1,8 +1,11 @@
 /* 定义词法单元 */
 
+#ifndef FIREFLY_INTERPRETER_TOKEN_H
+#define FIREFLY_INTERPRETER_TOKEN_H
+
 #include <string>
 #include <map>
-#include "../include/magic_enum.hpp"
+#include "include/magic_enum.hpp"
 
 using namespace std;
 
@@ -39,8 +42,5 @@ TokenType lookup_ident(const string &ident) {
     }
     return TokenType::IDENT;
 }
-
-#ifndef FIREFLY_INTERPRETER_TOKEN_H
-#define FIREFLY_INTERPRETER_TOKEN_H
 
 #endif //FIREFLY_INTERPRETER_TOKEN_H

@@ -4,10 +4,10 @@ project(Firefly_interpreter)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Firefly_interpreter src/main.cpp
-        src/token/token.hpp
-        src/lexer/lexer.hpp
-        src/repl/repl.hpp
-        src/ast/ast.hpp
-        src/parser/parser.hpp
+        src/token.hpp
+        src/lexer.hpp
+        src/repl.hpp
+        src/ast.hpp
+        src/parser.hpp
         src/include/magic_enum.hpp
 )

@@ -1,6 +1,9 @@
 /* 定义词法分析器 */
 
-#include "../token/token.hpp"
+#ifndef FIREFLY_INTERPRETER_LEXER_HPP
+#define FIREFLY_INTERPRETER_LEXER_HPP
+
+#include "token.hpp"
 #include <string>
 #include <utility>
 
@@ -153,8 +156,5 @@ Lexer *new_lex(string input) {
     read_char(l);
     return l;
 }
-
-#ifndef FIREFLY_INTERPRETER_LEXER_HPP
-#define FIREFLY_INTERPRETER_LEXER_HPP
 
 #endif //FIREFLY_INTERPRETER_LEXER_HPP

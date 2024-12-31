@@ -1,6 +1,9 @@
 /* 定义抽象语法树AST */
 
-#include "../token/token.hpp"
+#ifndef FIREFLY_INTERPRETER_AST_HPP
+#define FIREFLY_INTERPRETER_AST_HPP
+
+#include "token.hpp"
 #include <vector>
 
 using namespace std;
@@ -87,6 +90,63 @@ public:
     }
 };
 
+// 布尔表达式
+class Boolean : public Expression {
+public:
+    Token token;
+    bool value{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 语句块
+class BlockStatement : public Statement {
+public:
+    Token token;
+    vector<Statement *> statements;
+    string statement_node() override {
+        // TODO
+    }
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// IF表达式
+class IfExpression : public Expression {
+public:
+    Token token;
+    Expression *condition{};
+    BlockStatement *consequence{};
+    BlockStatement *alternative{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 函数字面量表达式
+class FunctionLiteral : public Expression {
+public:
+    Token token;
+    vector<Identifier *> parameters;
+    BlockStatement *body{};
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
+// 函数调用表达式
+class CallExpression : public Expression {
+public:
+    Token token;
+    Expression *function{};
+    vector<Expression *> arguments;
+    string token_literal() override {
+        return token.Literal;
+    }
+};
+
 // VAR语句
 class VarStatement : public Statement {
 public:
@@ -126,8 +186,5 @@ public:
         return token.Literal;
     }
 };
-
-#ifndef FIREFLY_INTERPRETER_AST_HPP
-#define FIREFLY_INTERPRETER_AST_HPP
 
 #endif //FIREFLY_INTERPRETER_AST_HPP
